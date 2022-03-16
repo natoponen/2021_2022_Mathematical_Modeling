@@ -233,6 +233,132 @@ while (!done) {
 
 ---
 
+# Кластер-кластерная агрегация
+
+---
+
+### Хранение кластеров
+
+```java
+public static ArrayList<Particle> cluster; //коллекция частиц = кластер
+public static Map<Integer, ArrayList<Particle>> clusters = new HashMap<Integer, ArrayList<Particle>>();  //словарь с кластерами
+```
+
+---
+
+### Заполнение поля частицами
+
+```java
+int P = 15000; // число частиц
+        // разбрасываем частицы по полю
+        for (int i = 0; i<P; i++) {
+            int xp = (int) (Math.random()*490);
+            int yp = (int) (Math.random()*490);
+            cluster = new ArrayList<>();
+            Particle p = new Particle(xp,yp);
+            cluster.add(p);
+            if (!isOccupied(xp,yp)) {
+                dla[xp][yp]=true;
+                clusters.put(i,cluster);
+            }
+        }
+```
+
+---
+
+### Движение кластеров
+
+```java
+boolean done = false;
+Iterator<Map.Entry<Integer, ArrayList<Particle>>> iterator;
+        while (!done) {
+            iterator = clusters.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Map.Entry<Integer, ArrayList<Particle>> entry = iterator.next();
+                double r = Math.random();
+                int move;
+                if (r < 0.25) move = 1;
+                else if (r < 0.50) move = 2;
+                else if (r < 0.75) move = 3;
+                else move = 4;
+                moveCluster(move, entry.getValue(), pic);
+                for (Particle p : entry.getValue()) {
+                    if (isOccupied(p.x-1,p.y)) {
+                        Particle pc = new Particle(p.x - 1, p.y);
+                        if (entry.getValue().contains(pc)) {
+                            break;
+                        } else {
+                            mergeClusters(p,pc);
+                        }
+                    }
+                    ...
+            if (entry.getValue().size()==P) {
+                    done = true;
+                }
+            }
+        }
+
+```
+
+---
+
+### Вспомогательный метод движения кластера
+
+```java
+public static void moveCluster
+    (int move, ArrayList<Particle> cluster, Picture pic){
+        for (Particle p: cluster) {
+            int x_before = p.x;
+            int y_before = p.y;
+            p.moveParticle(move);
+            dla[x_before][y_before]=false;
+            dla[p.x][p.y]=true;
+            pic.set(p.x, N-p.y-1, Color.white);
+            pic.set(x_before,N-y_before-1, Color.black);
+            pic.show();
+        }
+    }
+```
+
+---
+
+### Вспомогательный метод слияния кластеров
+
+```java
+public static void mergeClusters(Particle p1, Particle p2) {
+        ArrayList<Particle> list1 = new ArrayList<>();
+        ArrayList<Particle> list2 = new ArrayList<>();
+        Integer numOfCluster1 = 0;
+        Integer numOfCluster2 = 0;
+        for (Map.Entry<Integer, ArrayList<Particle>> entry : clusters.entrySet()) {
+            if (entry.getValue().contains(p1)) {
+                list1.addAll(entry.getValue());
+                numOfCluster1 = entry.getKey();
+            }
+            if (entry.getValue().contains(p2)) {
+                list2.addAll(entry.getValue());
+                numOfCluster2 = entry.getKey();
+            }
+        }
+        if (!list1.isEmpty() && !list2.isEmpty()) {
+            list1.addAll(list2);
+            clusters.put(numOfCluster1, list1);
+            list2.removeAll(list2);
+            clusters.put(numOfCluster2, list2);
+        }
+    }
+```
+
+---
+
+### Полученный фрактал:
+
+![h:480 w:750 center](image/4.png)
+
+#### Рис.4 Кластер-кластерная агрегация
+
+---
+
 ### Код
 
 - Все материалы, а также код программ можно найти здесь: [github](https://github.com/natoponen/2021_2022_Mathematical_Modeling/tree/master/Project/presentation_3)
